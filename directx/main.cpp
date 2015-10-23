@@ -9,6 +9,9 @@
 #pragma comment(lib, "d3dx11.lib")
 #pragma comment(lib, "d3dx10.lib")
 
+#define SCREEN_WIDTH 1920
+#define SCREEN_HEIGHT 1080
+
 ID3D11Device *dev;
 ID3D11DeviceContext *devcon;
 IDXGISwapChain *swapchain;
@@ -40,7 +43,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	wc.lpfnWndProc = WindowProc;
 	wc.hInstance = hInstance;
 	wc.hCursor = LoadCursor( NULL, IDC_ARROW );
-	wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
+	//wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
 	wc.lpszClassName = "WindowClass1";
 
 	RECT wr = { 0, 0, 500, 400 };
@@ -56,8 +59,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		WS_OVERLAPPEDWINDOW,    // window style
 		300,    // x-position of the window
 		300,    // y-position of the window
-		wr.right - wr.left,    // width of the window
-		wr.bottom - wr.top,    // height of the window
+		SCREEN_WIDTH,    // width of the window
+		SCREEN_HEIGHT,    // height of the window
 		NULL,    // we have no parent window, NULL
 		NULL,    // we aren't using menus, NULL
 		hInstance,    // application handle
@@ -123,10 +126,13 @@ void initD3D( HWND hWnd ) {
 	// fill the swap chain description struct
 	scd.BufferCount = 1;
 	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	scd.BufferDesc.Width = SCREEN_WIDTH;
+	scd.BufferDesc.Height = SCREEN_HEIGHT;
 	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	scd.OutputWindow = hWnd;
 	scd.SampleDesc.Count = 4;
 	scd.Windowed = TRUE;
+	scd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 	// create a device, device context and swap chain using the info in the scd struct
 	D3D11CreateDeviceAndSwapChain( NULL,
@@ -159,13 +165,15 @@ void initD3D( HWND hWnd ) {
 
 	viewPort.TopLeftX = 0;
 	viewPort.TopLeftY = 0;
-	viewPort.Width = 800;
-	viewPort.Height = 600;
+	viewPort.Width = SCREEN_WIDTH;
+	viewPort.Height = SCREEN_HEIGHT;
 
 	devcon->RSSetViewports( 1, &viewPort );
 }
 
 void cleanD3D( ) {
+	swapchain->SetFullscreenState( FALSE, NULL );
+
 	swapchain->Release();
 	backBuffer->Release();
 	dev->Release();
