@@ -12,9 +12,11 @@
 ID3D11Device *dev;
 ID3D11DeviceContext *devcon;
 IDXGISwapChain *swapchain;
+ID3D11RenderTargetView *backBuffer;
 
 void initD3D( HWND hWnd );
 void cleanD3D();
+void renderFrame();
 
 // the WindowProc function prototype
 LRESULT CALLBACK WindowProc( HWND hWnd,
@@ -83,9 +85,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 			if ( msg.message == WM_QUIT ) {
 				break;
 			}
-		} else {
+		} 
 
-		}
+		renderFrame();
 	}
 
 	cleanD3D();
@@ -139,10 +141,43 @@ void initD3D( HWND hWnd ) {
 		&dev,
 		NULL,
 		&devcon );
+
+	// set the render target
+	// get the address of the back buffer
+	ID3D11Texture2D *pBackBuffer;
+	swapchain->GetBuffer( 0, __uuidof( ID3D11Texture2D ), (LPVOID*)&pBackBuffer );
+
+	// use the back buffer address to create the render targetr
+	dev->CreateRenderTargetView( pBackBuffer, NULL, &backBuffer );
+	pBackBuffer->Release();
+	// set the render target as the back buffer
+	devcon->OMSetRenderTargets( 1, &backBuffer, NULL );
+
+	// set the view port
+	D3D11_VIEWPORT viewPort;
+	ZeroMemory( &viewPort, sizeof( D3D11_VIEWPORT ) );
+
+	viewPort.TopLeftX = 0;
+	viewPort.TopLeftY = 0;
+	viewPort.Width = 800;
+	viewPort.Height = 600;
+
+	devcon->RSSetViewports( 1, &viewPort );
 }
 
 void cleanD3D( ) {
 	swapchain->Release();
+	backBuffer->Release();
 	dev->Release();
 	devcon->Release();
+}
+
+void renderFrame() {
+	// clear the back buffer to a deep blue
+	devcon->ClearRenderTargetView( backBuffer, D3DXCOLOR( 0.0f, 0.2f, 0.4f, 1.0f ) );
+
+	// do 3D rendering on the back buffer here
+
+	// switch the back buffer and the front buffer
+	swapchain->Present( 0, 0 );
 }
