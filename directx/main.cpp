@@ -1,6 +1,20 @@
 // include the basic windows header file
 #include <windows.h>
 #include <windowsx.h>
+#include <d3d11.h>
+#include <d3dx11.h>
+#include <d3dx10.h>
+
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "d3dx11.lib")
+#pragma comment(lib, "d3dx10.lib")
+
+ID3D11Device *dev;
+ID3D11DeviceContext *devcon;
+IDXGISwapChain *swapchain;
+
+void initD3D( HWND hWnd );
+void cleanD3D();
 
 // the WindowProc function prototype
 LRESULT CALLBACK WindowProc( HWND hWnd,
@@ -50,6 +64,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 				   // display the window on the screen
 	ShowWindow( hWnd, nCmdShow );
 
+	initD3D( hWnd );
+
 	// enter the main loop:
 
 	// this struct holds Windows event messages
@@ -72,6 +88,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		}
 	}
 
+	cleanD3D();
+
 	// return this part of the WM_QUIT message to Windows
 	return msg.wParam;
 }
@@ -91,4 +109,40 @@ LRESULT CALLBACK WindowProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
 	// Handle any messages the switch statement didn't
 	return DefWindowProc( hWnd, message, wParam, lParam );
+}
+
+void initD3D( HWND hWnd ) {
+	// create a struct to hold info about the swap chain
+	DXGI_SWAP_CHAIN_DESC scd;
+
+	// clear out the struct for use
+	ZeroMemory( &scd, sizeof( DXGI_SWAP_CHAIN_DESC ) );
+
+	// fill the swap chain description struct
+	scd.BufferCount = 1;
+	scd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	scd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	scd.OutputWindow = hWnd;
+	scd.SampleDesc.Count = 4;
+	scd.Windowed = TRUE;
+
+	// create a device, device context and swap chain using the info in the scd struct
+	D3D11CreateDeviceAndSwapChain( NULL,
+		D3D_DRIVER_TYPE_HARDWARE,
+		NULL,
+		NULL,
+		NULL,
+		NULL,
+		D3D11_SDK_VERSION,
+		&scd,
+		&swapchain,
+		&dev,
+		NULL,
+		&devcon );
+}
+
+void cleanD3D( ) {
+	swapchain->Release();
+	dev->Release();
+	devcon->Release();
 }
